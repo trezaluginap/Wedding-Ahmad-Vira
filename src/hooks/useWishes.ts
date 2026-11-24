@@ -8,7 +8,7 @@ const DEFAULT_WISHES: Wish[] = [
   {
     id: '1',
     name: 'Dimas Pratama',
-    message: 'Selamat menempuh hidup baru Romeo & Juliet! Semoga sakinah mawaddah warahmah selamanya.',
+    message: 'Selamat menempuh hidup baru Ahmad & Putri! Semoga sakinah mawaddah warahmah selamanya.',
     createdAt: 'Baru saja'
   },
   {
@@ -18,6 +18,19 @@ const DEFAULT_WISHES: Wish[] = [
     createdAt: '1 jam yang lalu'
   }
 ]
+
+function getLocalWishes(): Wish[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
+  } catch {
+    // ignore
+  }
+  return DEFAULT_WISHES
+}
 
 function formatRelativeTime(dateStr?: string) {
   if (!dateStr) return 'Baru saja'
@@ -32,40 +45,46 @@ function formatRelativeTime(dateStr?: string) {
 }
 
 export function useWishes() {
-  const [wishes, setWishes] = useState<Wish[]>([])
+  const [wishes, setWishes] = useState<Wish[]>(getLocalWishes)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     const client = supabase
     if (!isSupabaseConfigured || !client) {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY)
-        setWishes(stored ? JSON.parse(stored) : DEFAULT_WISHES)
-      } catch {
-        setWishes(DEFAULT_WISHES)
-      }
+      setWishes(getLocalWishes())
       return
     }
 
     const fetchWishes = async () => {
       setIsLoading(true)
-      const { data, error } = await client
-        .from('wishes')
-        .select('*')
-        .order('created_at', { ascending: false })
+      try {
+        const { data, error } = await client
+          .from('wishes')
+          .select('*')
+          .order('created_at', { ascending: false })
 
-      if (!error && data) {
-        setWishes(
-          data.map((item) => ({
-            id: String(item.id),
-            name: item.name,
-            message: item.message,
-            createdAt: formatRelativeTime(item.created_at)
-          }))
-        )
+        if (error) {
+          console.warn('Supabase fetch failed, fallback to local:', error.message)
+          setWishes(getLocalWishes())
+        } else if (data && data.length > 0) {
+          setWishes(
+            data.map((item) => ({
+              id: String(item.id),
+              name: item.name,
+              message: item.message,
+              createdAt: formatRelativeTime(item.created_at)
+            }))
+          )
+        } else {
+          setWishes(getLocalWishes())
+        }
+      } catch (err) {
+        console.warn('Network error, fallback to local wishes:', err)
+        setWishes(getLocalWishes())
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
 
     fetchWishes()
@@ -98,30 +117,36 @@ export function useWishes() {
 
   const addWish = async (name: string, message: string) => {
     const client = supabase
+    const localNewWish: Wish = {
+      id: Date.now().toString(),
+      name,
+      message,
+      createdAt: 'Baru saja'
+    }
+
+    // Selalu simpan ke local state terlebih dahulu agar user langsung melihat responnya
+    const updated = [localNewWish, ...wishes]
+    setWishes(updated)
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+    } catch {
+      // ignore
+    }
+
     if (!isSupabaseConfigured || !client) {
-      const newWish: Wish = {
-        id: Date.now().toString(),
-        name,
-        message,
-        createdAt: 'Baru saja'
-      }
-      const updated = [newWish, ...wishes]
-      setWishes(updated)
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
-      } catch {
-        // ignore
-      }
       return true
     }
 
     try {
       setIsSubmitting(true)
       const { error } = await client.from('wishes').insert([{ name, message }])
-      if (error) throw error
+      if (error) {
+        console.warn('Gagal insert ke Supabase:', error.message)
+      }
       return true
-    } catch {
-      return false
+    } catch (err) {
+      console.warn('Gagal insert ke Supabase:', err)
+      return true
     } finally {
       setIsSubmitting(false)
     }

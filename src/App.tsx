@@ -12,6 +12,7 @@ import { AudioPlayer } from './components/AudioPlayer'
 import { BottomNav } from './components/BottomNav'
 import { SundaFloralDivider } from './components/SundaOrnaments'
 import { JasminePetals } from './components/JasminePetals'
+import { GuestLinkGenerator } from './components/GuestLinkGenerator'
 import { INVITATION_DATA } from './data/invitation'
 
 export default function App() {
@@ -102,6 +103,9 @@ export default function App() {
 
           {/* Bottom Navigation */}
           <BottomNav onBackToCover={() => setIsOpen(false)} />
+
+          {/* Floating Generator Link Tamu */}
+          <GuestLinkGenerator />
         </div>
       )}
     </div>
