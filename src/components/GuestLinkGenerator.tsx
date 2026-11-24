@@ -1,11 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { UserPlus, Copy, Check, MessageCircle, X } from 'lucide-react'
 
 export function GuestLinkGenerator() {
+  const [isAdmin, setIsAdmin] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [name, setName] = useState('')
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    // Mode rahasia: hanya aktif jika URL memiliki parameter ?admin=true atau ?secret=manten
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('admin') === 'true' || params.get('secret') === 'manten') {
+      setIsAdmin(true)
+    }
+  }, [])
+
+  if (!isAdmin) {
+    return null
+  }
 
   const baseUrl = typeof window !== 'undefined'
     ? `${window.location.origin}${window.location.pathname}`
@@ -30,15 +43,15 @@ export function GuestLinkGenerator() {
 
   return (
     <>
-      {/* Floating Button Buat Link Tamu */}
+      {/* Floating Button Buat Link Tamu (Hanya muncul jika mode Admin) */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-4 z-40 bg-[#421E17] text-[#FAF8F5] border border-[#E28574]/40 px-3.5 py-2 rounded-full shadow-lg flex items-center gap-2 text-xs font-semibold backdrop-blur-md hover:bg-[#5C2419] transition-all cursor-pointer"
+        className="fixed bottom-20 right-4 z-40 bg-[#421E17] text-[#FAF8F5] border border-[#E28574]/40 px-3.5 py-2 rounded-full shadow-lg flex items-center gap-2 text-xs font-semibold backdrop-blur-md hover:bg-[#5C2419] transition-all cursor-pointer ring-2 ring-[#E28574]/60"
       >
         <UserPlus className="w-3.5 h-3.5 text-[#E28574]" />
-        <span>Buat Undangan Tamu</span>
+        <span>Admin: Buat Undangan Tamu</span>
       </motion.button>
 
       {/* Modal Generator */}
@@ -53,7 +66,7 @@ export function GuestLinkGenerator() {
             >
               <button
                 onClick={() => setIsOpen(false)}
-                className="absolute top-4 right-4 text-stone-400 hover:text-stone-700"
+                className="absolute top-4 right-4 text-stone-400 hover:text-stone-700 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -67,7 +80,7 @@ export function GuestLinkGenerator() {
                     Buat Link Tamu Khusus
                   </h3>
                   <p className="text-[10px] text-stone-500">
-                    Ketik nama tamu untuk link & pesan WhatsApp otomatis
+                    Mode Admin: Ketik nama tamu untuk link & pesan WhatsApp
                   </p>
                 </div>
               </div>
