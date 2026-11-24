@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-serif: 'Cinzel', serif;
+    --font-script: 'Great Vibes', cursive;
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  html {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: auto;
+    -webkit-text-size-adjust: 100%;
+    background-color: #FFF6F2;
+  }
+
+  body {
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 100vh;
+    font-family: var(--font-sans);
+    margin: 0;
+    padding: 0;
+    background-color: #FFF6F2;
+    -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #root {
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-script {
+  font-family: var(--font-script);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+/* Custom animations */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+
+/* Hide scrollbar for clean UI */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
