@@ -12,10 +12,11 @@ import { AudioPlayer } from './components/AudioPlayer'
 import { BottomNav } from './components/BottomNav'
 import { SundaFloralDivider } from './components/SundaOrnaments'
 import { JasminePetals } from './components/JasminePetals'
-import { GuestLinkGenerator } from './components/GuestLinkGenerator'
+import { AdminDashboard } from './components/AdminDashboard'
 import { INVITATION_DATA } from './data/invitation'
 
 export default function App() {
+  const [isAdmin, setIsAdmin] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [guestName, setGuestName] = useState('')
@@ -23,11 +24,20 @@ export default function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
+    if (params.get('admin') === 'true' || params.get('secret') === 'manten') {
+      setIsAdmin(true)
+    }
+
     const to = params.get('to') || params.get('guest')
     if (to) {
       setGuestName(to.replace(/\+/g, ' '))
     }
   }, [])
+
+  // Jika membuka URL admin, tampilkan AdminDashboard mandiri (bersih, tanpa tema undangan)
+  if (isAdmin) {
+    return <AdminDashboard />
+  }
 
   const handleOpenInvitation = () => {
     setIsOpen(true)
@@ -103,9 +113,6 @@ export default function App() {
 
           {/* Bottom Navigation */}
           <BottomNav onBackToCover={() => setIsOpen(false)} />
-
-          {/* Floating Generator Link Tamu */}
-          <GuestLinkGenerator />
         </div>
       )}
     </div>
